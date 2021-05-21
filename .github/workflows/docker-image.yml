@@ -37,6 +37,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          file: stable/Dockerfile
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/flutter:latest, ${{ secrets.DOCKERHUB_USERNAME }}/flutter:stable
           platforms: linux/amd64,linux/arm64
 
