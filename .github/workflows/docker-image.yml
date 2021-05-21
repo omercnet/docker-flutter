@@ -1,23 +1,53 @@
-name: Docker Image CI
+name: ci
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches:
+      - "master"
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
         id: buildx
         with:
           install: true
 
-      - uses: actions/checkout@v2
-      - name: Build the Docker image
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Inspect builder
         run: |
-          docker build . --file stable/Dockerfile --tag omercnet/flutter:stable --tag omercnet/flutter
-          docker build . --file beta/Dockerfile --tag omercnet/flutter:beta
-          docker build . --file dev/Dockerfile --tag omercnet/flutter:dev
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+
+      - name: Build and push (stable)
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags:
+            - ${{ secrets.DOCKERHUB_USERNAME }}/flutter:latest
+            - ${{ secrets.DOCKERHUB_USERNAME }}/flutter:stable
+          platforms: linux/amd64,linux/arm64
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/flutter
