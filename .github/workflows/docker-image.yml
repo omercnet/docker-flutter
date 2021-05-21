@@ -2,22 +2,22 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: docker/setup-buildx-action@v1
-      id: buildx
-      with:
-        install: true
+      - uses: docker/setup-buildx-action@v1
+        id: buildx
+        with:
+          install: true
 
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: |
-        docker build stable/ --file Dockerfile --tag omercnet/flutter:stable --tag omercnet/flutter
-        docker build beta/ --file Dockerfile --tag omercnet/flutter:beta
-        docker build dev/ --file Dockerfile --tag omercnet/flutter:dev
+      - uses: actions/checkout@v2
+      - name: Build the Docker image
+        run: |
+          docker build . --file stable/Dockerfile --tag omercnet/flutter:stable --tag omercnet/flutter
+          docker build . --file beta/Dockerfile --tag omercnet/flutter:beta
+          docker build . --file dev/Dockerfile --tag omercnet/flutter:dev
